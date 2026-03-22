@@ -1,236 +1,470 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="obsidian">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZYNC — Guest Terminal</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        /* ── THEME TOKENS ─────────────────────────────────────────── */
-        :root { --transition: 0.55s cubic-bezier(.4,0,.2,1); }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ZYNC — Guest Terminal</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
-        [data-theme="obsidian"] {
-            --bg-a: #080810; --bg-b: #0f0f1a; --surface: rgba(255,255,255,0.04);
-            --border: rgba(255,255,255,0.08); --accent: #00FFB2; --accent-alt: #63b3ed;
-            --text-primary: #edf2f7; --text-muted: #718096; --btn-bg: #00FFB2;
-            --btn-text: #080810; --live-color: #00FFB2; --glow: rgba(0, 255, 178, 0.15);
-            --particle: rgba(0, 255, 178, 0.6);
-        }
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg:       #07080D;
+      --surface:  #0C0D15;
+      --lift:     #111320;
+      --border:   rgba(255,255,255,0.07);
+      --neon:     #00FFB2;
+      --neon2:    #00C8FF;
+      --red:      #FF3B5C;
+      --text:     #DDE3EE;
+      --muted:    #3D4460;
+      --glow-sm:  0 0 10px rgba(0,255,178,.35), 0 0 30px rgba(0,255,178,.12);
+      --glow-lg:  0 0 20px rgba(0,255,178,.5),  0 0 60px rgba(0,255,178,.18);
+      --mono: 'Space Mono', monospace;
+      --head: 'Syne', sans-serif;
+      --ease: cubic-bezier(.4,0,.2,1);
+    }
 
-        /* ── RESET & BASE ─────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── RESET ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
 
-        body {
-            background: linear-gradient(145deg, var(--bg-a) 0%, var(--bg-b) 100%);
-            color: var(--text-primary);
-            font-family: 'Syne', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
 
-        /* ── SCANNER UI ───────────────────────────────────────────── */
-        #reader-wrapper {
-            width: 100%;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: #000;
-            margin-bottom: 20px;
-            display: none; /* Shown when 'Scan' is clicked */
-        }
+    /* ── AMBIENT LAYER ──────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 45% at 50% 0%,   rgba(0,255,178,.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 90%,  rgba(0,200,255,.04) 0%, transparent 60%);
+    }
 
-        /* ── CARD ─────────────────────────────────────────────────── */
-        .card {
-            background: var(--surface);
-            backdrop-filter: blur(28px);
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            width: 100%;
-            max-width: 420px;
-            padding: 40px 30px;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 60px var(--glow);
-            text-align: center;
-        }
+    /* ── OUTER SHELL ────────────────────────────────────── */
+    .shell {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 400px;
+      /* entry animation */
+      animation: rise .6s var(--ease) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-        .logo-icon {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 32px;
-            letter-spacing: 6px;
-            color: var(--accent);
-            margin-bottom: 8px;
-            text-shadow: 0 0 15px var(--glow);
-        }
+    /* ── CARD ───────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow:
+        0 40px 80px rgba(0,0,0,.6),
+        0 0 0 1px rgba(255,255,255,.03) inset;
+    }
 
-        .subtitle {
-            font-size: 10px;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-family: 'DM Mono', monospace;
-            margin-bottom: 30px;
-        }
+    /* top accent line */
+    .card::before {
+      content: '';
+      display: block; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon), transparent);
+      opacity: .6;
+    }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: rgba(0,0,0,0.3);
-            color: var(--text-primary);
-            font-family: 'DM Mono', monospace;
-            margin-bottom: 15px;
-            text-align: center;
-        }
+    /* ── HEADER ─────────────────────────────────────────── */
+    .hdr {
+      padding: 28px 28px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-mark {
+      width: 32px; height: 32px;
+      border: 1.5px solid var(--neon);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-family: var(--head);
+      font-size: 13px; font-weight: 800; letter-spacing: 1px;
+      color: var(--neon);
+      box-shadow: var(--glow-sm);
+    }
+    .logo-text {
+      font-family: var(--head);
+      font-size: 18px; font-weight: 800; letter-spacing: 4px;
+    }
+    .logo-sub {
+      font-size: 8px; letter-spacing: 3px; color: var(--muted);
+      margin-top: 2px; text-transform: uppercase;
+    }
+    .badge {
+      font-size: 8px; letter-spacing: 2px; padding: 5px 10px;
+      border-radius: 20px; border: 1px solid var(--border);
+      color: var(--muted); text-transform: uppercase;
+      transition: all .3s;
+    }
+    .badge.live {
+      border-color: var(--neon); color: var(--neon);
+      box-shadow: var(--glow-sm);
+      animation: badge-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes badge-pulse {
+      0%,100% { opacity:1; } 50% { opacity:.5; }
+    }
 
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+    /* ── BODY ───────────────────────────────────────────── */
+    .body { padding: 24px 28px 28px; display: flex; flex-direction: column; gap: 18px; }
 
-        button {
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+    /* ── SCANNER ────────────────────────────────────────── */
+    #reader-wrapper {
+      display: none;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+    #reader-wrapper.open { display: block; animation: rise .3s var(--ease); }
 
-        .btn-primary { background: var(--btn-bg); color: var(--btn-text); grid-column: span 2; }
-        .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--border); }
+    /* ── FIELD ──────────────────────────────────────────── */
+    .field-label {
+      font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field {
+      position: relative;
+      background: var(--lift);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex; align-items: center;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .field:focus-within {
+      border-color: rgba(0,255,178,.4);
+      box-shadow: 0 0 0 3px rgba(0,255,178,.06);
+    }
+    .field input {
+      flex: 1; padding: 14px 16px;
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-family: var(--mono); font-size: 12px;
+      letter-spacing: 1.5px;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field-action {
+      padding: 8px 12px; margin-right: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted);
+      font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+      cursor: pointer; white-space: nowrap;
+      transition: border-color .2s, color .2s;
+    }
+    .field-action:hover { border-color: var(--neon); color: var(--neon); }
 
-        .status-msg {
-            margin-top: 20px;
-            font-size: 11px;
-            font-family: 'DM Mono', monospace;
-            color: var(--text-muted);
-        }
+    /* ── ACTIONS ROW ────────────────────────────────────── */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        #remoteAudio { width: 100%; margin-top: 20px; display: none; }
+    .btn {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; padding: 13px 10px;
+      border-radius: 10px; border: 1px solid var(--border);
+      cursor: pointer; transition: all .2s var(--ease); outline: none;
+    }
+    .btn-ghost {
+      background: var(--lift); color: var(--muted);
+    }
+    .btn-ghost:hover { border-color: var(--neon); color: var(--neon); }
 
-        /* ── VISUALIZER ───────────────────────────────────────────── */
-        .visualizer {
-            display: none;
-            gap: 4px;
-            align-items: center;
-            justify-content: center;
-            height: 40px;
-            margin-top: 20px;
-        }
-        .viz-bar { width: 4px; height: 10px; background: var(--accent); border-radius: 2px; }
-        .active .viz-bar { animation: wave 0.6s infinite alternate; }
-        @keyframes wave { from { height: 5px; } to { height: 35px; } }
-    </style>
+    .btn-connect {
+      grid-column: span 2;
+      background: var(--neon); color: #000; border-color: var(--neon);
+      font-weight: 700; font-size: 11px; letter-spacing: 3px;
+      box-shadow: var(--glow-sm);
+    }
+    .btn-connect:hover { box-shadow: var(--glow-lg); filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-connect:active { transform: translateY(0); }
+    .btn-connect:disabled {
+      background: var(--muted); border-color: var(--muted);
+      box-shadow: none; cursor: not-allowed; transform: none;
+    }
+
+    /* ── STATUS ─────────────────────────────────────────── */
+    .status-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      background: var(--lift); border: 1px solid var(--border);
+      border-radius: 10px; transition: border-color .4s;
+    }
+    .status-row.ok  { border-color: rgba(0,255,178,.25); }
+    .status-row.err { border-color: rgba(255,59,92,.25); }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
+      transition: background .4s, box-shadow .4s;
+    }
+    .status-row.ok  .status-dot { background: var(--neon); box-shadow: var(--glow-sm); animation: badge-pulse 1.8s ease-in-out infinite; }
+    .status-row.err .status-dot { background: var(--red); }
+    #status-text {
+      font-size: 10px; letter-spacing: 1.5px; color: var(--muted);
+      transition: color .4s;
+    }
+    .status-row.ok  #status-text { color: var(--neon); }
+    .status-row.err #status-text { color: var(--red); }
+
+    /* ── VU BARS ────────────────────────────────────────── */
+    .vu-wrap {
+      display: none; /* shown when live */
+      height: 36px; align-items: flex-end;
+      justify-content: center; gap: 3px;
+    }
+    .vu-wrap.show { display: flex; }
+    .vu-bar {
+      width: 4px; border-radius: 2px;
+      background: var(--neon); height: 6px;
+      transition: height .08s linear;
+      box-shadow: 0 0 6px rgba(0,255,178,.5);
+    }
+
+    /* ── AUDIO ──────────────────────────────────────────── */
+    audio {
+      width: 100%; border-radius: 8px;
+      display: none; margin-top: 4px;
+      accent-color: var(--neon);
+    }
+    audio.show { display: block; }
+
+    /* ── DIVIDER ────────────────────────────────────────── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--muted); font-size: 9px; letter-spacing: 2px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="logo-icon">ZYNC</div>
-        <div class="subtitle">Guest Terminal</div>
+<div class="shell">
+  <div class="card">
 
-        <div id="reader-wrapper">
-            <div id="reader"></div>
+    <!-- Header -->
+    <div class="hdr">
+      <div class="logo">
+        <div class="logo-mark">Z</div>
+        <div>
+          <div class="logo-text">ZYNC</div>
+          <div class="logo-sub">Guest Terminal</div>
         </div>
-
-        <input type="text" id="hostId" placeholder="HOST ID OR SCAN QR" autocomplete="off">
-        
-        <div class="btn-group">
-            <button class="btn-secondary" onclick="startScanner()">Open Scanner</button>
-            <button class="btn-secondary" onclick="pasteId()">Paste ID</button>
-            <button class="btn-primary" id="connectBtn">Connect & Listen</button>
-        </div>
-
-        <div class="status-msg" id="status">Ready to sync</div>
-
-        <div class="visualizer" id="visualizer">
-            <div class="viz-bar" style="animation-delay: 0.1s"></div>
-            <div class="viz-bar" style="animation-delay: 0.3s"></div>
-            <div class="viz-bar" style="animation-delay: 0.2s"></div>
-            <div class="viz-bar" style="animation-delay: 0.4s"></div>
-            <div class="viz-bar" style="animation-delay: 0.1s"></div>
-        </div>
-
-        <audio id="remoteAudio" controls autoplay></audio>
+      </div>
+      <div class="badge" id="badge">STANDBY</div>
     </div>
 
-    <script>
-        const peer = new Peer();
-        const hostIdInput = document.getElementById('hostId');
-        const statusText = document.getElementById('status');
-        const visualizer = document.getElementById('visualizer');
-        const remoteAudio = document.getElementById('remoteAudio');
-        let html5QrCode = null;
+    <!-- Body -->
+    <div class="body">
 
-        // 1. Scanner Logic
-        function startScanner() {
-            document.getElementById('reader-wrapper').style.display = 'block';
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      <!-- QR Scanner -->
+      <div id="reader-wrapper">
+        <div id="reader"></div>
+      </div>
 
-            html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-                // Extract Host ID if the QR is a URL (e.g., ...?host=ID)
-                let id = decodedText;
-                try {
-                    const url = new URL(decodedText);
-                    id = url.searchParams.get("host") || decodedText;
-                } catch(e) {}
-                
-                hostIdInput.value = id;
-                stopScanner();
-                statusText.textContent = "Host ID captured.";
-            });
-        }
+      <!-- Host ID input -->
+      <div>
+        <div class="field-label">Host Session ID</div>
+        <div class="field">
+          <input type="text" id="hostId" placeholder="Paste or scan host ID…" autocomplete="off" spellcheck="false" />
+          <button class="field-action" onclick="pasteId()">PASTE</button>
+        </div>
+      </div>
 
-        function stopScanner() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('reader-wrapper').style.display = 'none';
-                });
-            }
-        }
+      <!-- Buttons -->
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="startScanner()">▣ Scan QR</button>
+        <button class="btn btn-ghost" onclick="stopScanner()">✕ Cancel</button>
+        <button class="btn btn-connect" id="connectBtn">▶ Connect & Listen</button>
+      </div>
 
-        async function pasteId() {
-            const text = await navigator.clipboard.readText();
-            hostIdInput.value = text;
-        }
+      <div class="divider">stream</div>
 
-        // 2. PeerJS Logic
-        document.getElementById('connectBtn').onclick = () => {
-            const hostId = hostIdInput.value.trim();
-            if (!hostId) return;
+      <!-- Status -->
+      <div class="status-row" id="status-row">
+        <div class="status-dot"></div>
+        <span id="status-text">Ready to sync</span>
+      </div>
 
-            statusText.textContent = "Establishing P2P link...";
-            
-            // PeerJS Call
-            const call = peer.call(hostId, new MediaStream());
-            
-            call.on('stream', (stream) => {
-                statusText.textContent = "CONNECTED • STREAMING LIVE";
-                statusText.style.color = "var(--accent)";
-                visualizer.style.display = "flex";
-                visualizer.classList.add('active');
-                
-                remoteAudio.srcObject = stream;
-                remoteAudio.play();
-            });
+      <!-- Live VU bars -->
+      <div class="vu-wrap" id="vu-wrap">
+        <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        <div class="vu-bar"></div>
+      </div>
 
-            call.on('error', (err) => {
-                statusText.textContent = "Connection failed. Check Host ID.";
-                console.error(err);
-            });
-        };
-    </script>
+      <!-- Audio element -->
+      <audio id="remoteAudio" controls autoplay></audio>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── PEER INIT ───────────────────────── */
+const peer = new Peer(undefined, {
+  host: '0.peerjs.com', port: 443, path: '/', secure: true,
+  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+});
+
+/* ── REFS ───────────────────────────── */
+const hostIdInput  = document.getElementById('hostId');
+const statusRow    = document.getElementById('status-row');
+const statusText   = document.getElementById('status-text');
+const badge        = document.getElementById('badge');
+const vuWrap       = document.getElementById('vu-wrap');
+const vuBars       = vuWrap.querySelectorAll('.vu-bar');
+const remoteAudio  = document.getElementById('remoteAudio');
+let   html5QrCode  = null;
+let   audioCtx, analyser, vuRAF;
+
+/* ── STATUS HELPER ──────────────────── */
+function setStatus(msg, type = '') {
+  statusText.textContent = msg;
+  statusRow.className = 'status-row' + (type ? ' ' + type : '');
+}
+
+/* ── SCANNER ────────────────────────── */
+function startScanner() {
+  const wrapper = document.getElementById('reader-wrapper');
+  wrapper.classList.add('open');
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 220, height: 220 } },
+    (decoded) => {
+      let id = decoded;
+      try {
+        const url = new URL(decoded);
+        id = url.searchParams.get("host") || decoded;
+      } catch(e) {}
+      hostIdInput.value = id;
+      stopScanner();
+      setStatus('Host ID captured — tap Connect.');
+    }
+  );
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      document.getElementById('reader-wrapper').classList.remove('open');
+      html5QrCode = null;
+    }).catch(() => {
+      document.getElementById('reader-wrapper').classList.remove('open');
+    });
+  }
+}
+
+async function pasteId() {
+  try {
+    const text = await navigator.clipboard.readText();
+    hostIdInput.value = text.trim();
+    setStatus('ID pasted — tap Connect.');
+  } catch(e) {
+    setStatus('Clipboard access denied.', 'err');
+  }
+}
+
+/* ── CONNECT ────────────────────────── */
+document.getElementById('connectBtn').onclick = () => {
+  const hostId = hostIdInput.value.trim();
+  if (!hostId) { setStatus('Enter or scan a Host ID first.', 'err'); return; }
+
+  setStatus('Establishing P2P link…');
+  document.getElementById('connectBtn').disabled = true;
+
+  const call = peer.call(hostId, new MediaStream());
+
+  call.on('stream', (stream) => {
+    setStatus('CONNECTED · STREAMING LIVE', 'ok');
+    badge.textContent = 'LIVE';
+    badge.classList.add('live');
+
+    remoteAudio.srcObject = stream;
+    remoteAudio.classList.add('show');
+    remoteAudio.play().catch(() => {});
+
+    startVU(stream);
+  });
+
+  call.on('close', () => {
+    setStatus('Host ended the session.', 'err');
+    badge.textContent = 'OFFLINE';
+    badge.classList.remove('live');
+    stopVU();
+  });
+
+  call.on('error', (err) => {
+    setStatus('Connection failed — check the Host ID.', 'err');
+    document.getElementById('connectBtn').disabled = false;
+    console.error('Zync call error:', err);
+  });
+};
+
+/* ── WEB AUDIO VU ───────────────────── */
+function startVU(stream) {
+  vuWrap.classList.add('show');
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = audioCtx.createMediaStreamSource(stream);
+  analyser  = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  analyser.smoothingTimeConstant = 0.75;
+  src.connect(analyser);
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+
+  function tick() {
+    vuRAF = requestAnimationFrame(tick);
+    analyser.getByteFrequencyData(buf);
+    const step = Math.floor(buf.length / vuBars.length);
+    vuBars.forEach((bar, i) => {
+      const val  = buf[i * step] / 255;
+      const hpx  = Math.max(3, val * 32);
+      bar.style.height = hpx + 'px';
+      // colour shift: neon → cyan at high levels
+      const hue  = 160 - Math.round(val * 30);
+      bar.style.background = `hsl(${hue}, 100%, 55%)`;
+    });
+  }
+  tick();
+}
+
+function stopVU() {
+  if (vuRAF)   { cancelAnimationFrame(vuRAF); vuRAF = null; }
+  if (audioCtx){ audioCtx.close(); audioCtx = null; }
+  vuWrap.classList.remove('show');
+}
+
+/* ── AUTO-CONNECT (QR link) ─────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search);
+  const hostId = params.get('host');
+  if (hostId) {
+    hostIdInput.value = hostId;
+    setStatus('Host ID loaded from link — tap Connect.');
+  }
+});
+</script>
 </body>
 </html>
