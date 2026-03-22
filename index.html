@@ -2,105 +2,22 @@
 <html lang="en" data-theme="obsidian">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harsh Audio Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZYNC — Guest Terminal</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         /* ── THEME TOKENS ─────────────────────────────────────────── */
-        :root {
-            --transition: 0.55s cubic-bezier(.4,0,.2,1);
-        }
+        :root { --transition: 0.55s cubic-bezier(.4,0,.2,1); }
 
         [data-theme="obsidian"] {
-            --bg-a: #080810;
-            --bg-b: #0f0f1a;
-            --surface: rgba(255,255,255,0.04);
-            --surface-hover: rgba(255,255,255,0.07);
-            --border: rgba(255,255,255,0.08);
-            --border-glow: rgba(99,179,237,0.35);
-            --accent: #63b3ed;
-            --accent-alt: #9f7aea;
-            --text-primary: #edf2f7;
-            --text-muted: #718096;
-            --btn-bg: #63b3ed;
-            --btn-text: #080810;
-            --live-color: #68d391;
-            --glow: rgba(99,179,237,0.12);
-            --particle: rgba(99,179,237,0.6);
-        }
-
-        [data-theme="ember"] {
-            --bg-a: #0d0805;
-            --bg-b: #1a0f08;
-            --surface: rgba(255,200,100,0.05);
-            --surface-hover: rgba(255,200,100,0.09);
-            --border: rgba(255,200,100,0.1);
-            --border-glow: rgba(251,146,60,0.4);
-            --accent: #fb923c;
-            --accent-alt: #fbbf24;
-            --text-primary: #fef3c7;
-            --text-muted: #92400e;
-            --btn-bg: #fb923c;
-            --btn-text: #1a0a00;
-            --live-color: #4ade80;
-            --glow: rgba(251,146,60,0.12);
-            --particle: rgba(251,146,60,0.6);
-        }
-
-        [data-theme="arctic"] {
-            --bg-a: #f0f4f8;
-            --bg-b: #e2e8f0;
-            --surface: rgba(0,0,0,0.04);
-            --surface-hover: rgba(0,0,0,0.07);
-            --border: rgba(0,0,0,0.08);
-            --border-glow: rgba(56,189,248,0.4);
-            --accent: #0284c7;
-            --accent-alt: #7c3aed;
-            --text-primary: #0f172a;
-            --text-muted: #64748b;
-            --btn-bg: #0284c7;
-            --btn-text: #ffffff;
-            --live-color: #16a34a;
-            --glow: rgba(2,132,199,0.08);
-            --particle: rgba(2,132,199,0.5);
-        }
-
-        [data-theme="midnight"] {
-            --bg-a: #020617;
-            --bg-b: #0f172a;
-            --surface: rgba(255,255,255,0.03);
-            --surface-hover: rgba(255,255,255,0.06);
-            --border: rgba(255,255,255,0.06);
-            --border-glow: rgba(167,139,250,0.4);
-            --accent: #a78bfa;
-            --accent-alt: #f472b6;
-            --text-primary: #e2e8f0;
-            --text-muted: #475569;
-            --btn-bg: #a78bfa;
-            --btn-text: #020617;
-            --live-color: #34d399;
-            --glow: rgba(167,139,250,0.1);
-            --particle: rgba(167,139,250,0.6);
-        }
-
-        [data-theme="forest"] {
-            --bg-a: #061008;
-            --bg-b: #0d1f10;
-            --surface: rgba(100,255,130,0.04);
-            --surface-hover: rgba(100,255,130,0.07);
-            --border: rgba(100,255,130,0.09);
-            --border-glow: rgba(74,222,128,0.35);
-            --accent: #4ade80;
-            --accent-alt: #a3e635;
-            --text-primary: #ecfdf5;
-            --text-muted: #166534;
-            --btn-bg: #4ade80;
-            --btn-text: #061008;
-            --live-color: #86efac;
-            --glow: rgba(74,222,128,0.1);
-            --particle: rgba(74,222,128,0.6);
+            --bg-a: #080810; --bg-b: #0f0f1a; --surface: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08); --accent: #00FFB2; --accent-alt: #63b3ed;
+            --text-primary: #edf2f7; --text-muted: #718096; --btn-bg: #00FFB2;
+            --btn-text: #080810; --live-color: #00FFB2; --glow: rgba(0, 255, 178, 0.15);
+            --particle: rgba(0, 255, 178, 0.6);
         }
 
         /* ── RESET & BASE ─────────────────────────────────────────── */
@@ -115,520 +32,205 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px;
-            transition: background var(--transition), color var(--transition);
+            padding: 20px;
             overflow-x: hidden;
-            position: relative;
         }
 
-        /* ── ANIMATED BACKGROUND ──────────────────────────────────── */
-        .bg-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.35;
-            pointer-events: none;
-            animation: drift 12s ease-in-out infinite alternate;
-            transition: background var(--transition);
-        }
-        .bg-orb-1 {
-            width: 420px; height: 420px;
-            background: var(--accent);
-            top: -100px; left: -100px;
-            animation-delay: 0s;
-        }
-        .bg-orb-2 {
-            width: 320px; height: 320px;
-            background: var(--accent-alt);
-            bottom: -80px; right: -80px;
-            animation-delay: -6s;
-        }
-        @keyframes drift {
-            from { transform: translate(0, 0) scale(1); }
-            to   { transform: translate(30px, 20px) scale(1.08); }
-        }
-
-        /* Canvas for particles */
-        #canvas {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        /* ── THEME SWITCHER ───────────────────────────────────────── */
-        .theme-bar {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--surface);
-            backdrop-filter: blur(16px);
+        /* ── SCANNER UI ───────────────────────────────────────────── */
+        #reader-wrapper {
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
             border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 8px 14px;
-            z-index: 100;
-            transition: background var(--transition), border var(--transition);
+            background: #000;
+            margin-bottom: 20px;
+            display: none; /* Shown when 'Scan' is clicked */
         }
-        .theme-label {
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 0.12em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        .theme-dots {
-            display: flex;
-            gap: 6px;
-        }
-        .theme-dot {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-            position: relative;
-        }
-        .theme-dot:hover { transform: scale(1.25); }
-        .theme-dot.active {
-            border-color: white;
-            transform: scale(1.18);
-        }
-        .theme-dot[data-t="obsidian"] { background: linear-gradient(135deg,#63b3ed,#9f7aea); }
-        .theme-dot[data-t="ember"]    { background: linear-gradient(135deg,#fb923c,#fbbf24); }
-        .theme-dot[data-t="arctic"]   { background: linear-gradient(135deg,#0284c7,#7c3aed); }
-        .theme-dot[data-t="midnight"] { background: linear-gradient(135deg,#a78bfa,#f472b6); }
-        .theme-dot[data-t="forest"]   { background: linear-gradient(135deg,#4ade80,#a3e635); }
 
         /* ── CARD ─────────────────────────────────────────────────── */
         .card {
             background: var(--surface);
             backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
             border: 1px solid var(--border);
             border-radius: 28px;
             width: 100%;
             max-width: 420px;
-            padding: 44px 40px 36px;
-            box-shadow:
-                0 0 0 1px var(--border),
-                0 24px 80px rgba(0,0,0,0.5),
-                0 0 60px var(--glow);
-            position: relative;
-            transition: background var(--transition), border var(--transition), box-shadow var(--transition);
-            animation: cardIn 0.7s cubic-bezier(.34,1.56,.64,1) both;
-        }
-        @keyframes cardIn {
-            from { opacity:0; transform: translateY(32px) scale(0.96); }
-            to   { opacity:1; transform: translateY(0)    scale(1); }
-        }
-
-        /* Shimmer top edge */
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 10%; right: 10%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0.6;
-            border-radius: 1px;
-            transition: background var(--transition);
-        }
-
-        /* ── LOGO / HEADER ────────────────────────────────────────── */
-        .logo-area {
+            padding: 40px 30px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 60px var(--glow);
             text-align: center;
-            margin-bottom: 36px;
         }
+
         .logo-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 16px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-alt));
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 8px 24px var(--glow), 0 0 0 1px var(--border-glow);
-            transition: background var(--transition), box-shadow var(--transition);
-            animation: iconPulse 3s ease-in-out infinite;
-        }
-        @keyframes iconPulse {
-            0%,100% { box-shadow: 0 8px 24px var(--glow), 0 0 0 1px var(--border-glow); }
-            50%      { box-shadow: 0 8px 36px var(--glow), 0 0 0 3px var(--border-glow); }
-        }
-        .studio-name {
-            font-size: 11px;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--accent);
-            font-family: 'DM Mono', monospace;
-            font-weight: 400;
-            margin-bottom: 6px;
-            transition: color var(--transition);
-        }
-        h1 {
-            font-size: 26px;
+            font-family: 'Syne', sans-serif;
             font-weight: 800;
-            letter-spacing: -0.02em;
-            color: var(--text-primary);
-            line-height: 1.1;
-            transition: color var(--transition);
+            font-size: 32px;
+            letter-spacing: 6px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px var(--glow);
         }
+
         .subtitle {
-            margin-top: 8px;
-            font-size: 13px;
-            color: var(--text-muted);
-            font-family: 'DM Mono', monospace;
-            font-weight: 300;
-            transition: color var(--transition);
-        }
-
-        /* ── DIVIDER ──────────────────────────────────────────────── */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 0 0 28px;
-            transition: background var(--transition);
-        }
-
-        /* ── INPUT ────────────────────────────────────────────────── */
-        .input-wrap {
-            position: relative;
-            margin-bottom: 16px;
-        }
-        .input-label {
-            display: block;
             font-size: 10px;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.3em;
             text-transform: uppercase;
             color: var(--text-muted);
             font-family: 'DM Mono', monospace;
-            margin-bottom: 8px;
-            transition: color var(--transition);
+            margin-bottom: 30px;
         }
+
         input[type="text"] {
             width: 100%;
-            padding: 15px 18px;
-            border-radius: 14px;
+            padding: 15px;
+            border-radius: 12px;
             border: 1px solid var(--border);
-            background: rgba(0,0,0,0.15);
+            background: rgba(0,0,0,0.3);
             color: var(--text-primary);
-            font-size: 14px;
             font-family: 'DM Mono', monospace;
-            letter-spacing: 0.05em;
-            outline: none;
-            transition: border-color 0.25s, box-shadow 0.25s, background var(--transition);
-        }
-        input[type="text"]::placeholder { color: var(--text-muted); }
-        input[type="text"]:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--glow);
-            background: rgba(0,0,0,0.22);
+            margin-bottom: 15px;
+            text-align: center;
         }
 
-        /* ── BUTTON ───────────────────────────────────────────────── */
-        button#connectBtn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            border-radius: 12px;
             border: none;
-            background: var(--btn-bg);
-            color: var(--btn-text);
             font-family: 'Syne', sans-serif;
             font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.1em;
             text-transform: uppercase;
             cursor: pointer;
-            margin-top: 8px;
-            position: relative;
-            overflow: hidden;
-            transition: background var(--transition), color var(--transition), transform 0.15s, box-shadow 0.25s;
+            transition: 0.2s;
         }
-        button#connectBtn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.22) 50%, transparent 70%);
-            transform: translateX(-100%);
-            transition: transform 0.5s ease;
-        }
-        button#connectBtn:hover::after { transform: translateX(100%); }
-        button#connectBtn:hover {
-            box-shadow: 0 8px 28px var(--glow);
-            transform: translateY(-1px);
-        }
-        button#connectBtn:active { transform: scale(0.98) translateY(0); }
 
-        /* ── STATUS PILL ──────────────────────────────────────────── */
-        .status-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        .btn-primary { background: var(--btn-bg); color: var(--btn-text); grid-column: span 2; }
+        .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--border); }
+
+        .status-msg {
             margin-top: 20px;
-        }
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            transition: background 0.3s;
-            flex-shrink: 0;
-        }
-        .status-dot.live {
-            background: var(--live-color);
-            box-shadow: 0 0 0 3px rgba(104,211,145,0.25);
-            animation: blink 1.2s ease-in-out infinite;
-        }
-        @keyframes blink {
-            0%,100% { opacity: 1; }
-            50%      { opacity: 0.4; }
-        }
-        #status {
+            font-size: 11px;
             font-family: 'DM Mono', monospace;
-            font-size: 12px;
             color: var(--text-muted);
-            letter-spacing: 0.06em;
-            transition: color var(--transition);
         }
-        #status.active { color: var(--live-color); }
 
-        /* ── AUDIO PLAYER ─────────────────────────────────────────── */
-        .audio-wrap {
-            margin-top: 24px;
-            background: rgba(0,0,0,0.18);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 4px;
-            overflow: hidden;
-            transition: border-color var(--transition), background var(--transition);
-        }
-        audio {
-            width: 100%;
-            height: 44px;
-            outline: none;
-            border-radius: 10px;
-            display: block;
-            filter: invert(0);
-        }
-        /* Waveform visualizer bars */
+        #remoteAudio { width: 100%; margin-top: 20px; display: none; }
+
+        /* ── VISUALIZER ───────────────────────────────────────────── */
         .visualizer {
             display: none;
-            gap: 3px;
-            align-items: flex-end;
+            gap: 4px;
+            align-items: center;
             justify-content: center;
-            height: 36px;
-            padding: 0 12px;
-            margin-top: 10px;
+            height: 40px;
+            margin-top: 20px;
         }
-        .visualizer.show { display: flex; }
-        .viz-bar {
-            width: 4px;
-            border-radius: 2px;
-            background: var(--accent);
-            animation: wavebar 0.8s ease-in-out infinite alternate;
-            transition: background var(--transition);
-        }
-        .viz-bar:nth-child(1)  { height: 40%; animation-delay: 0.0s; }
-        .viz-bar:nth-child(2)  { height: 70%; animation-delay: 0.1s; }
-        .viz-bar:nth-child(3)  { height: 55%; animation-delay: 0.2s; }
-        .viz-bar:nth-child(4)  { height: 90%; animation-delay: 0.3s; }
-        .viz-bar:nth-child(5)  { height: 65%; animation-delay: 0.15s; }
-        .viz-bar:nth-child(6)  { height: 80%; animation-delay: 0.05s; }
-        .viz-bar:nth-child(7)  { height: 45%; animation-delay: 0.25s; }
-        .viz-bar:nth-child(8)  { height: 75%; animation-delay: 0.35s; }
-        .viz-bar:nth-child(9)  { height: 60%; animation-delay: 0.1s; }
-        .viz-bar:nth-child(10) { height: 88%; animation-delay: 0.2s; }
-        .viz-bar:nth-child(11) { height: 50%; animation-delay: 0.3s; }
-        .viz-bar:nth-child(12) { height: 70%; animation-delay: 0.0s; }
-        @keyframes wavebar {
-            from { transform: scaleY(0.3); opacity: 0.5; }
-            to   { transform: scaleY(1);   opacity: 1; }
-        }
-
-        /* ── FOOTER ───────────────────────────────────────────────── */
-        .footer {
-            margin-top: 28px;
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            color: var(--text-muted);
-            letter-spacing: 0.12em;
-            text-align: center;
-            opacity: 0.6;
-            transition: color var(--transition);
-        }
+        .viz-bar { width: 4px; height: 10px; background: var(--accent); border-radius: 2px; }
+        .active .viz-bar { animation: wave 0.6s infinite alternate; }
+        @keyframes wave { from { height: 5px; } to { height: 35px; } }
     </style>
 </head>
 <body>
-    <!-- Background orbs -->
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
 
-    <!-- Particle canvas -->
-    <canvas id="canvas"></canvas>
-
-    <!-- Theme switcher -->
-    <div class="theme-bar">
-        <span class="theme-label">Theme</span>
-        <div class="theme-dots">
-            <div class="theme-dot active" data-t="obsidian" title="Obsidian"></div>
-            <div class="theme-dot"        data-t="ember"    title="Ember"></div>
-            <div class="theme-dot"        data-t="arctic"   title="Arctic"></div>
-            <div class="theme-dot"        data-t="midnight" title="Midnight"></div>
-            <div class="theme-dot"        data-t="forest"   title="Forest"></div>
-        </div>
-    </div>
-
-    <!-- Main card -->
     <div class="card">
-        <div class="logo-area">
-            <div class="logo-icon">🎧</div>
-            <h1>Harsh Audio Studio</h1>
-            <p class="subtitle">Enter a Host ID to start streaming</p>
+        <div class="logo-icon">ZYNC</div>
+        <div class="subtitle">Guest Terminal</div>
+
+        <div id="reader-wrapper">
+            <div id="reader"></div>
         </div>
 
-        <div class="divider"></div>
-
-        <label class="input-label" for="hostId">Host Session ID</label>
-        <div class="input-wrap">
-            <input type="text" id="hostId" placeholder="Paste Host ID here…" autocomplete="off" spellcheck="false">
+        <input type="text" id="hostId" placeholder="HOST ID OR SCAN QR" autocomplete="off">
+        
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="startScanner()">Open Scanner</button>
+            <button class="btn-secondary" onclick="pasteId()">Paste ID</button>
+            <button class="btn-primary" id="connectBtn">Connect & Listen</button>
         </div>
 
-        <button id="connectBtn">Connect &amp; Listen</button>
+        <div class="status-msg" id="status">Ready to sync</div>
 
-        <div class="status-wrap">
-            <div class="status-dot" id="statusDot"></div>
-            <div id="status">Waiting for Host ID</div>
+        <div class="visualizer" id="visualizer">
+            <div class="viz-bar" style="animation-delay: 0.1s"></div>
+            <div class="viz-bar" style="animation-delay: 0.3s"></div>
+            <div class="viz-bar" style="animation-delay: 0.2s"></div>
+            <div class="viz-bar" style="animation-delay: 0.4s"></div>
+            <div class="viz-bar" style="animation-delay: 0.1s"></div>
         </div>
 
-        <div class="audio-wrap">
-            <audio id="remoteAudio" controls autoplay></audio>
-            <div class="visualizer" id="visualizer">
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-                <div class="viz-bar"></div><div class="viz-bar"></div>
-            </div>
-        </div>
+        <audio id="remoteAudio" controls autoplay></audio>
     </div>
-
-    <div class="footer">HARSH AUDIO STUDIO © 2025 &nbsp;·&nbsp; POWERED BY WEBRTC</div>
 
     <script>
-        /* ── THEME SWITCHER ───────────────────────────────────────── */
-        const html = document.documentElement;
-        document.querySelectorAll('.theme-dot').forEach(dot => {
-            dot.addEventListener('click', () => {
-                document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
-                dot.classList.add('active');
-                html.setAttribute('data-theme', dot.dataset.t);
-                localStorage.setItem('hasTheme', dot.dataset.t);
-                initParticles(); // refresh particle color
-            });
-        });
-        // Restore saved theme
-        const saved = localStorage.getItem('hasTheme');
-        if (saved) {
-            html.setAttribute('data-theme', saved);
-            document.querySelectorAll('.theme-dot').forEach(d => {
-                d.classList.toggle('active', d.dataset.t === saved);
-            });
-        }
-
-        /* ── FLOATING PARTICLES ───────────────────────────────────── */
-        const canvas = document.getElementById('canvas');
-        const ctx    = canvas.getContext('2d');
-        let particles = [];
-
-        function getCSSVar(v) {
-            return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-        }
-
-        function initParticles() {
-            canvas.width  = window.innerWidth;
-            canvas.height = window.innerHeight;
-            particles = Array.from({ length: 38 }, () => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                r: Math.random() * 1.8 + 0.4,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
-                alpha: Math.random() * 0.5 + 0.1,
-            }));
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const color = getCSSVar('--particle') || 'rgba(99,179,237,0.6)';
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.x < 0) p.x = canvas.width;
-                if (p.x > canvas.width) p.x = 0;
-                if (p.y < 0) p.y = canvas.height;
-                if (p.y > canvas.height) p.y = 0;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.globalAlpha = p.alpha;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            });
-            requestAnimationFrame(animateParticles);
-        }
-
-        initParticles();
-        animateParticles();
-        window.addEventListener('resize', initParticles);
-
-        /* ── PEER / AUDIO CORE (unchanged logic) ──────────────────── */
-        const peer        = new Peer();
-        const connectBtn  = document.getElementById('connectBtn');
+        const peer = new Peer();
         const hostIdInput = document.getElementById('hostId');
-        const statusText  = document.getElementById('status');
-        const statusDot   = document.getElementById('statusDot');
+        const statusText = document.getElementById('status');
+        const visualizer = document.getElementById('visualizer');
         const remoteAudio = document.getElementById('remoteAudio');
-        const visualizer  = document.getElementById('visualizer');
+        let html5QrCode = null;
 
-        function setStatus(msg, live = false) {
-            statusText.textContent = msg;
-            statusText.className   = live ? 'active' : '';
-            statusDot.className    = 'status-dot' + (live ? ' live' : '');
-            visualizer.className   = 'visualizer' + (live ? ' show' : '');
+        // 1. Scanner Logic
+        function startScanner() {
+            document.getElementById('reader-wrapper').style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+                // Extract Host ID if the QR is a URL (e.g., ...?host=ID)
+                let id = decodedText;
+                try {
+                    const url = new URL(decodedText);
+                    id = url.searchParams.get("host") || decodedText;
+                } catch(e) {}
+                
+                hostIdInput.value = id;
+                stopScanner();
+                statusText.textContent = "Host ID captured.";
+            });
         }
 
-        peer.on('open', () => {
-            console.log('Guest ready');
-        });
-
-        connectBtn.onclick = () => {
-            const hostId = hostIdInput.value.trim();
-            if (!hostId) {
-                hostIdInput.focus();
-                hostIdInput.style.borderColor = 'red';
-                setTimeout(() => hostIdInput.style.borderColor = '', 1200);
-                return;
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('reader-wrapper').style.display = 'none';
+                });
             }
-            setStatus('Connecting to host…');
+        }
+
+        async function pasteId() {
+            const text = await navigator.clipboard.readText();
+            hostIdInput.value = text;
+        }
+
+        // 2. PeerJS Logic
+        document.getElementById('connectBtn').onclick = () => {
+            const hostId = hostIdInput.value.trim();
+            if (!hostId) return;
+
+            statusText.textContent = "Establishing P2P link...";
+            
+            // PeerJS Call
             const call = peer.call(hostId, new MediaStream());
+            
             call.on('stream', (stream) => {
-                setStatus('LIVE', true);
+                statusText.textContent = "CONNECTED • STREAMING LIVE";
+                statusText.style.color = "var(--accent)";
+                visualizer.style.display = "flex";
+                visualizer.classList.add('active');
+                
                 remoteAudio.srcObject = stream;
                 remoteAudio.play();
             });
-            call.on('error', () => setStatus('Connection failed ✕'));
-        };
 
-        // Allow Enter key to connect
-        hostIdInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') connectBtn.click();
-        });
+            call.on('error', (err) => {
+                statusText.textContent = "Connection failed. Check Host ID.";
+                console.error(err);
+            });
+        };
     </script>
 </body>
 </html>
