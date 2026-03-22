@@ -388,6 +388,21 @@ async function pasteId() {
 }
 
 /* ── CONNECT ────────────────────────── */
+function makeSilentStream() {
+  // A real (but silent) audio track — required so Chrome/Firefox
+  // complete ICE negotiation. An empty MediaStream() often stalls.
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const dst = ctx.createMediaStreamDestination();
+  // Oscillator at 0 gain = silence, but a valid audio track
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(dst);
+  osc.start();
+  return dst.stream;
+}
+
 document.getElementById('connectBtn').onclick = () => {
   const hostId = hostIdInput.value.trim();
   if (!hostId) { setStatus('Enter or scan a Host ID first.', 'err'); return; }
@@ -395,16 +410,28 @@ document.getElementById('connectBtn').onclick = () => {
   setStatus('Establishing P2P link…');
   document.getElementById('connectBtn').disabled = true;
 
-  const call = peer.call(hostId, new MediaStream());
+  // Use a silent stream instead of empty MediaStream so ICE negotiation succeeds
+  const call = peer.call(hostId, makeSilentStream());
 
   call.on('stream', (stream) => {
+    // Only wire up if we actually got audio tracks
+    if (stream.getAudioTracks().length === 0) {
+      setStatus('Stream received but has no audio tracks.', 'err');
+      document.getElementById('connectBtn').disabled = false;
+      return;
+    }
+
     setStatus('CONNECTED · STREAMING LIVE', 'ok');
     badge.textContent = 'LIVE';
     badge.classList.add('live');
 
     remoteAudio.srcObject = stream;
     remoteAudio.classList.add('show');
-    remoteAudio.play().catch(() => {});
+    // autoplay policy: must be triggered by user gesture (the button click counts)
+    remoteAudio.play().catch(e => {
+      setStatus('Tap the audio bar to unmute.', 'ok');
+      console.warn('Autoplay blocked:', e);
+    });
 
     startVU(stream);
   });
